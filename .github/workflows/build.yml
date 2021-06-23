@@ -28,7 +28,7 @@ jobs:
       - name: Test
         env:
           TEST_COVERAGE: 1
-        run:
+        run: echo "hello"
       - name: Upload Coverage
         uses: codecov/codecov-action@v1.0.5
         with:
@@ -74,8 +74,7 @@ jobs:
       - name: Test
         env:
           TEST_COVERAGE: 1
-        run: |
-
+        run: echo "hello"
       - name: Prepare Codecov
         uses: crazy-max/ghaction-chocolatey@v1
         with:
