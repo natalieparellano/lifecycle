@@ -1,0 +1,60 @@
+name: post-release
+
+on:
+  release:
+    types:
+      - created # trigger for releases and pre-releases
+
+jobs:
+  pack-acceptance-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/lifecycle'
+          path: 'lifecycle'
+          fetch-depth: 0 # fetch all history for all branches and tags
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/pack'
+          path: 'pack'
+          ref: 'main'
+      - name: Set env
+        run: |
+          echo "LIFECYCLE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -d "v" -f2)" >> $GITHUB_ENV
+          cd lifecycle && echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> $GITHUB_ENV
+      - name: Download Linux asset
+        run: |
+          gh release download ${{ github.event.release.tag_name }} -p *linux*.tgz
+      - name: Run pack acceptance
+        run: |
+          cd ../pack
+          LIFECYCLE_PATH="../lifecycle/lifecycle-${{ github.event.release.tag_name }}+linux.x86-64.tgz" \
+          LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+          make acceptance
+  pack-acceptance-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/lifecycle'
+          path: 'lifecycle'
+          fetch-depth: 0 # fetch all history for all branches and tags
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/pack'
+          path: 'pack'
+          ref: 'main'
+      - name: Set env
+        run: |
+          echo "LIFECYCLE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -d "v" -f2)" >> $env:GITHUB_ENV
+          cd lifecycle && echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> $env:GITHUB_ENV
+      - name: Download Windows asset
+        run: |
+          gh release download ${{ github.event.release.tag_name }} -p *windows*.tgz
+      - name: Run pack acceptance
+        run: |
+          cd ../pack
+          $env:LIFECYCLE_PATH="..\lifecycle\lifecycle-${{ github.event.release.tag_name }}+windows.x86-64.tgz"
+          $env:LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+          make acceptance
