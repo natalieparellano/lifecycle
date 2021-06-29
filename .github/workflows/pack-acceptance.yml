@@ -30,7 +30,7 @@ jobs:
         run: |
           cd ../pack
           LIFECYCLE_PATH="../lifecycle/lifecycle-${{ github.event.release.tag_name }}+linux.x86-64.tgz" \
-          LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
           make acceptance
   pack-acceptance-windows:
     runs-on: windows-latest
@@ -56,5 +56,5 @@ jobs:
         run: |
           cd ../pack
           $env:LIFECYCLE_PATH="..\lifecycle\lifecycle-${{ github.event.release.tag_name }}+windows.x86-64.tgz"
-          $env:LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
           make acceptance
