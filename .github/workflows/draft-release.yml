@@ -188,6 +188,7 @@ jobs:
           make acceptance
   draft-release:
     # needs: [pack-acceptance-linux, pack-acceptance-windows]
+    needs: download-artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
