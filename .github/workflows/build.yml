@@ -138,63 +138,63 @@ jobs:
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+windows.x86-64.tgz -tag natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG} natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}
-  pack-acceptance-linux:
-    if: github.event_name == 'push'
-    needs: build-and-publish
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: 'buildpacks/pack'
-          path: 'pack'
-          ref: 'main'
-      - uses: actions/download-artifact@v2
-        with:
-          name: version
-      - uses: actions/download-artifact@v2
-        with:
-          name: tag
-      - name: Set env
-        run: |
-          cat version.txt >> $GITHUB_ENV
-          cat tag.txt >> $GITHUB_ENV
-      - uses: actions/download-artifact@v2
-        with:
-          name: lifecycle-linux-x86-64
-          path: pack
-      - name: Run pack acceptance
-        run: |
-          cd pack
-          LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
-          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
-          make acceptance
-  pack-acceptance-windows:
-    if: github.event_name == 'push'
-    needs: build-and-publish
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: 'buildpacks/pack'
-          path: 'pack'
-          ref: 'main'
-      - uses: actions/download-artifact@v2
-        with:
-          name: version
-      - uses: actions/download-artifact@v2
-        with:
-          name: tag
-      - name: Set env
-        run: |
-          cat version.txt >> $GITHUB_ENV
-          cat tag.txt >> $GITHUB_ENV
-      - uses: actions/download-artifact@v2
-        with:
-          name: lifecycle-windows-x86-64
-          path: pack
-      - name: Run pack acceptance
-        run: |
-          cd pack
-          $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
-          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
-          make acceptance
+#  pack-acceptance-linux:
+#    if: github.event_name == 'push'
+#    needs: build-and-publish
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: 'buildpacks/pack'
+#          path: 'pack'
+#          ref: 'main'
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: version
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: tag
+#      - name: Set env
+#        run: |
+#          cat version.txt >> $GITHUB_ENV
+#          cat tag.txt >> $GITHUB_ENV
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: lifecycle-linux-x86-64
+#          path: pack
+#      - name: Run pack acceptance
+#        run: |
+#          cd pack
+#          LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
+#          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+#          make acceptance
+#  pack-acceptance-windows:
+#    if: github.event_name == 'push'
+#    needs: build-and-publish
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: 'buildpacks/pack'
+#          path: 'pack'
+#          ref: 'main'
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: version
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: tag
+#      - name: Set env
+#        run: |
+#          cat version.txt >> $GITHUB_ENV
+#          cat tag.txt >> $GITHUB_ENV
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: lifecycle-windows-x86-64
+#          path: pack
+#      - name: Run pack acceptance
+#        run: |
+#          cd pack
+#          $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
+#          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+#          make acceptance
