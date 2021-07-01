@@ -8,8 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # fetch all history for all branches and tags
       - name: Install jq
         run: |
           mkdir -p deps/bin
@@ -23,18 +21,7 @@ jobs:
             echo "lifecycle version not detected."
             exit 1
           fi
-          echo "LIFECYCLE_VERSION=$version" | tee -a $GITHUB_ENV version.txt
-      - uses: actions/upload-artifact@v2
-        with:
-          name: version
-          path: version.txt
-      - name: Set tag
-        run: |
-          echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> tag.txt
-      - uses: actions/upload-artifact@v2
-        with:
-          name: tag
-          path: tag.txt
+          echo "LIFECYCLE_VERSION=$version" >> $GITHUB_ENV
       - name: Determine download urls for linux and windows
         id: artifact-urls
         uses: actions/github-script@v3.0.0
@@ -110,10 +97,6 @@ jobs:
           unzip -d artifact-linux artifact-linux.zip
           lifecycle_path=$(ls artifact-linux/lifecycle-*linux.x86-64.tgz)
           echo "ARTIFACT_LINUX_PATH=$PWD/$lifecycle_path" >> $GITHUB_ENV
-      - uses: actions/upload-artifact@v2
-        with:
-          name: linux-asset
-          path: ${{ env.ARTIFACT_LINUX_PATH }}
       - name: Download windows artifact
         run: |
           url=$(echo '${{ steps.artifact-urls.outputs.result }}' | jq -r .windows )
@@ -124,80 +107,6 @@ jobs:
           unzip -d artifact-windows artifact-windows.zip
           lifecycle_path=$(ls artifact-windows/lifecycle-*windows.x86-64.tgz)
           echo "ARTIFACT_WINDOWS_PATH=$PWD/$lifecycle_path" >> $GITHUB_ENV
-      - uses: actions/upload-artifact@v2
-        with:
-          name: windows-asset
-          path: ${{ env.ARTIFACT_WINDOWS_PATH }}
-  pack-acceptance-linux:
-    needs: download-artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: 'buildpacks/pack'
-          path: 'pack'
-          ref: 'main'
-      - uses: actions/download-artifact@v2
-        with:
-          name: version
-      - uses: actions/download-artifact@v2
-        with:
-          name: tag
-      - name: Set env
-        run: |
-          cat version.txt >> $GITHUB_ENV
-          cat tag.txt >> $GITHUB_ENV
-      - uses: actions/download-artifact@v2
-        with:
-          name: linux-asset
-          path: pack
-      - name: Run pack acceptance
-        run: |
-          cd pack
-          LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
-          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
-          make acceptance
-  pack-acceptance-windows:
-    needs: download-artifacts
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: 'buildpacks/pack'
-          path: 'pack'
-          ref: 'main'
-      - uses: actions/download-artifact@v2
-        with:
-          name: version
-      - uses: actions/download-artifact@v2
-        with:
-          name: tag
-      - name: Set env
-        run: |
-          cat version.txt >> $GITHUB_ENV
-          cat tag.txt >> $GITHUB_ENV
-      - uses: actions/download-artifact@v2
-        with:
-          name: windows-asset
-          path: pack
-      - name: Run pack acceptance
-        run: |
-          cd pack
-          $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
-          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
-          make acceptance
-  draft-release:
-    # needs: [pack-acceptance-linux, pack-acceptance-windows]
-    needs: download-artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
-        with:
-          name: version
-      - name: Set env
-        run: |
-          cat version.txt >> $GITHUB_ENV
       - name: Set pre-release kind
         if: contains(env.LIFECYCLE_VERSION, 'rc') # e.g., 0.99.0-rc.1
         run: |
@@ -225,19 +134,11 @@ jobs:
 
           An OCI image containing the lifecycle binaries is available at natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}.
           EOF
-      - name: Download Linux asset
-        uses: actions/download-artifact@v2
-        with:
-          name: linux-asset
-      - name: Download Windows asset
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-asset
       - name: Create Pre Release
         if: contains(env.LIFECYCLE_VERSION, 'rc') # e.g., 0.99.0-rc.1
         run: |
           gh release create v${{ env.LIFECYCLE_VERSION }} \
-            lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz \
+            ${{ env.ARTIFACT_LINUX_PATH }} ${{ env.ARTIFACT_WINDOWS_PATH }} \
             --draft \
             --notes-file body.txt \
             --prerelease \
@@ -249,7 +150,7 @@ jobs:
         if: "!contains(env.LIFECYCLE_VERSION, 'rc')"
         run: |
           gh release create v${{ env.LIFECYCLE_VERSION }} \
-            lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz \
+            ${{ env.ARTIFACT_LINUX_PATH }} ${{ env.ARTIFACT_WINDOWS_PATH }} \
             --draft \
             --notes-file body.txt \
             --target $GITHUB_REF \

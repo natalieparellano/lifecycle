@@ -96,6 +96,20 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.16'
+      - name: Set version
+        run: |
+          echo "LIFECYCLE_VERSION=$(go run tools/version/main.go)" >> version.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: version
+          path: version.txt
+      - name: Set tag
+        run: |
+          echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> tag.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tag
+          path: tag.txt
       - name: Build
         run: |
           make clean
@@ -109,14 +123,80 @@ jobs:
         with:
           name: lifecycle-windows-x86-64
           path: out/lifecycle-v*+windows.x86-64.tgz
+  pack-acceptance-linux:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/pack'
+          path: 'pack'
+          ref: 'main'
+      - uses: actions/download-artifact@v2
+        with:
+          name: version
+      - uses: actions/download-artifact@v2
+        with:
+          name: tag
+      - name: Set env
+        run: |
+          cat version.txt >> $GITHUB_ENV
+          cat tag.txt >> $GITHUB_ENV
+      - uses: actions/download-artifact@v2
+        with:
+          name: lifecycle-linux-x86-64
+          path: pack
+      - name: Run pack acceptance
+        run: |
+          cd pack
+          LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
+          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+          make acceptance
+  pack-acceptance-windows:
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'buildpacks/pack'
+          path: 'pack'
+          ref: 'main'
+      - uses: actions/download-artifact@v2
+        with:
+          name: version
+      - uses: actions/download-artifact@v2
+        with:
+          name: tag
+      - name: Set env
+        run: |
+          cat version.txt >> $GITHUB_ENV
+          cat tag.txt >> $GITHUB_ENV
+      - uses: actions/download-artifact@v2
+        with:
+          name: lifecycle-windows-x86-64
+          path: pack
+      - name: Run pack acceptance
+        run: |
+          cd pack
+          $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
+          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+          make acceptance
+  publish-images:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
       - uses: azure/docker-login@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Publish images
-        if: github.event_name == 'push'
+      - uses: actions/download-artifact@v2
+        with:
+          name: tag
+      - name: Set env
         run: |
-          LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
+          cat tag.txt >> $GITHUB_ENV
+      - name: Publish images
+        run: |
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+windows.x86-64.tgz -tag natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG} natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
