@@ -20,15 +20,15 @@ jobs:
           echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> $GITHUB_ENV
       - name: Retag lifecycle images - semver
         run: |
-          docker pull buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux
-          docker image tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux
-          docker push buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux
+          docker pull natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux
+          docker image tag natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux
+          docker push natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux
       - name: Retag lifecycle images - latest
         if: "!contains(env.LIFECYCLE_VERSION, 'rc')"
         run: |
-          docker pull buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux
-          docker image tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux buildpacksio/lifecycle:latest-linux
-          docker push buildpacksio/lifecycle:latest-linux
+          docker pull natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux
+          docker image tag natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux natalieparellano/lifecycle:latest-linux
+          docker push natalieparellano/lifecycle:latest-linux
   retag-lifecycle-images-windows:
     runs-on: windows-latest
     steps:
@@ -43,15 +43,15 @@ jobs:
           echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)" >> $env:GITHUB_ENV
       - name: Retag lifecycle images - semver
         run: |
-          docker pull buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows
-          docker image tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
-          docker push buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
+          docker pull natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows
+          docker image tag natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
+          docker push natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
       - name: Retag lifecycle images - latest
         if: "!contains(env.LIFECYCLE_VERSION, 'rc')"
         run: |
-          docker pull buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows
-          docker image tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows buildpacksio/lifecycle:latest-windows
-          docker push buildpacksio/lifecycle:latest-windows
+          docker pull natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows
+          docker image tag natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows natalieparellano/lifecycle:latest-windows
+          docker push natalieparellano/lifecycle:latest-windows
   create-manifest-lists:
     runs-on: ubuntu-latest
     needs: [retag-lifecycle-images-linux, retag-lifecycle-images-windows]
@@ -65,10 +65,10 @@ jobs:
           echo "LIFECYCLE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -d "v" -f2)" >> $GITHUB_ENV
       - name: Create lifecycle image manifest lists - semver
         run: |
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }} buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }} natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}
       - name: Create lifecycle image manifest lists - latest
         if: "!contains(env.LIFECYCLE_VERSION, 'rc')"
         run: |
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create buildpacksio/lifecycle:latest buildpacksio/lifecycle:latest-linux buildpacksio/lifecycle:latest-windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push buildpacksio/lifecycle:latest
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create natalieparellano/lifecycle:latest natalieparellano/lifecycle:latest-linux natalieparellano/lifecycle:latest-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push natalieparellano/lifecycle:latest
