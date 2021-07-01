@@ -185,6 +185,7 @@ jobs:
           make acceptance
   publish-images:
     if: github.event_name == 'push'
+    needs: [pack-acceptance-linux, pack-acceptance-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: azure/docker-login@v1
