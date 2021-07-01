@@ -43,7 +43,7 @@ jobs:
           script: |
             return github.actions
               .listRepoWorkflows({
-                 owner: "buildpacks",
+                 owner: "natalieparellano",
                  repo: "lifecycle",
               })
               .then(workflows_result => {
@@ -57,7 +57,7 @@ jobs:
               })
               .then(workflow_id => {
                 return github.actions.listWorkflowRunsForRepo({
-                  owner: "buildpacks",
+                  owner: "natalieparellano",
                   repo: "lifecycle",
                   workflow_id: workflow_id,
                   branch: "release/${{ env.LIFECYCLE_VERSION }}",
@@ -75,7 +75,7 @@ jobs:
               })
               .then(workflow_runid => {
                 return github.actions.listWorkflowRunArtifacts({
-                  owner: "buildpacks",
+                  owner: "natalieparellano",
                   repo: "lifecycle",
                   run_id: workflow_runid
                 })
@@ -155,7 +155,7 @@ jobs:
         run: |
           cd pack
           LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
-          LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
           make acceptance
   pack-acceptance-windows:
     needs: download-artifacts
@@ -184,10 +184,10 @@ jobs:
         run: |
           cd pack
           $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
-          $env:LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
           make acceptance
   draft-release:
-    needs: [pack-acceptance-linux, pack-acceptance-windows]
+    # needs: [pack-acceptance-linux, pack-acceptance-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -222,7 +222,7 @@ jobs:
 
           ## Lifecycle Image
 
-          An OCI image containing the lifecycle binaries is available at buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}.
+          An OCI image containing the lifecycle binaries is available at natalieparellano/lifecycle:${{ env.LIFECYCLE_VERSION }}.
           EOF
       - name: Download Linux asset
         uses: actions/download-artifact@v2
