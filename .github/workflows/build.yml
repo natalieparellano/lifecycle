@@ -82,7 +82,7 @@ jobs:
       - name: Run Codecov
         run: |
           codecov.exe -f .\out\tests\coverage-unit.txt -v --flag os_windows
-  build:
+  build-and-publish:
     needs:
       - test-linux
       - test-windows
@@ -140,7 +140,7 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}
   pack-acceptance-linux:
     if: github.event_name == 'push'
-    needs: build
+    needs: build-and-publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -170,7 +170,7 @@ jobs:
           make acceptance
   pack-acceptance-windows:
     if: github.event_name == 'push'
-    needs: build
+    needs: build-and-publish
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
