@@ -125,6 +125,7 @@ jobs:
           path: out/lifecycle-v*+windows.x86-64.tgz
   pack-acceptance-linux:
     if: github.event_name == 'push'
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -154,6 +155,7 @@ jobs:
           make acceptance
   pack-acceptance-windows:
     if: github.event_name == 'push'
+    needs: build
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
