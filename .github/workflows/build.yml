@@ -135,10 +135,10 @@ jobs:
       - name: Publish images
         if: github.event_name == 'push'
         run: |
-          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
-          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+windows.x86-64.tgz -tag buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG} buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}
+          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
+          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+windows.x86-64.tgz -tag natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG} natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push natalieparellano/lifecycle:${LIFECYCLE_IMAGE_TAG}
   pack-acceptance-linux:
     if: github.event_name == 'push'
     needs: build-and-publish
@@ -170,7 +170,7 @@ jobs:
           # git checkout $(git describe --abbrev=0 --tags) # check out the latest tag - TODO: uncomment when lifecycle-image-expectation is merged & released
           git checkout lifecycle-image-expectation
           LIFECYCLE_PATH="../lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz" \
-          LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
+          LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}" \
           make acceptance
   pack-acceptance-windows:
     if: github.event_name == 'push'
@@ -221,8 +221,6 @@ jobs:
           name: tag
       - name: Set env
         run: |
-          $IPAddress=(Get-NetIPAddress -InterfaceAlias ((Get-NetRoute "0.0.0.0/0").InterfaceAlias) -AddressFamily IPv4)[0].IPAddress
-          echo "IP_ADDR=$IPAddress" >> $env:GITHUB_ENV
           cat version.txt >> $env:GITHUB_ENV
           cat tag.txt >> $env:GITHUB_ENV
       - uses: actions/download-artifact@v2
@@ -235,5 +233,5 @@ jobs:
           # git checkout $(git describe --abbrev=0 --tags) # check out the latest tag - TODO: uncomment when lifecycle-image-expectation is merged & released
           git checkout lifecycle-image-expectation
           $env:LIFECYCLE_PATH="..\lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz"
-          $env:LIFECYCLE_IMAGE="buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
+          $env:LIFECYCLE_IMAGE="natalieparellano/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}"
           make acceptance
