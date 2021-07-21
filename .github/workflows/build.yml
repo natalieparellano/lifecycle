@@ -95,6 +95,9 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.16'
+      - name: Install cosign
+        run: |
+          go install github.com/sigstore/cosign/cmd/cosign@latest
       - name: Set version
         run: |
           echo "LIFECYCLE_VERSION=$(go run tools/version/main.go)" >> version.txt
@@ -150,6 +153,7 @@ jobs:
               buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux-arm64 \
               buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
           docker manifest push buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}
+          echo -n ${{ secrets.COSIGN_PASSWORD }} | cosign sign -key <(${{ secrets.COSIGN_KEY }}) -r buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}
   pack-acceptance-linux:
     if: github.event_name == 'push'
     needs: build-and-publish
